@@ -41,7 +41,7 @@ end
 %% Setup a view + Load Concatenation
 view = newView();
 view = viewSet(view,'curGroup','Concatenation');
-
+view = viewSet(view,'curscan',scan);
 %% Get analysis
 view = loadAnalysis(view,sprintf('erAnal/%s','task')); % check analysis name!
 
@@ -67,10 +67,52 @@ for ri = 1:length(rois)
     % save out individual matrices fort he areas
     save(fullfile(cfolder,sprintf('classify_%s.mat',rois{ri})),'carea');
 end
-
 %% Save
 save(fullfile(cfolder,sprintf('classify_%s',[rois{:}])),'data');
 
+%% Get individual trial responses
+stimvol = d.stimvol;
+
+    croi = loadROITSeries(view,rois,scan,viewGet(view,'curGroup'));
+    croi = getSortIndex(view,croi,task.overlays.data{2});
+    
+%% add missing info and get instances
+for ri = 1:length(rois)
+    croi{ri}.concatInfo = viewGet(view,'concatInfo');
+    croi{ri}.framePeriod = 1.5;
+    croi{ri}.nFrames = length(size(croi{ri}.tSeries,2));
+end
+
+clear times
+for ti = 2
+    times{1} = getInstances(view,croi,stimvol,'startLag',ti,'blockLen',4,'n=inf');
+end
+
+%% Pull instances and stack
+
+for ri = 1:length(rois)
+    if length(times{1}{ri}.instance.instances)==2
+        numIns = size(times{1}{ri}.instance.instances{1},1)+size(times{1}{ri}.instance.instances{2},1);
+    else
+        numIns = size(times{1}{ri}.instance.instances{1},1)+size(times{1}{ri}.instance.instances{2},1)+size(times{1}{ri}.instance.instances{3},1);
+    end
+    data = zeros(length(times),numIns,size(times{1}{ri}.instance.instances{1},2));
+
+    for ti = 1:length(times)
+        croi = times{ti};
+        cond = [];
+        cdat = [];
+        for ci = 1:length(croi{ri}.instance.instances)
+            cond = [cond ; ci*ones(size(croi{ri}.instance.instances{ci},1),1)];
+            cdat = [cdat ; croi{ri}.instance.instances{ci}];
+        end
+        data(ti,:,:) = cdat;
+        idx = strfind(cfolder,'s0');
+        cf =  cfolder(idx:end);
+        save(fullfile('~/proj/nepr207/2018/',cf,sprintf('%s_labels.mat',rois{ri})),'cond');
+        save(fullfile('~/proj/nepr207/2018/',cf,sprintf('%s_instances.mat',rois{ri})),'data');
+    end
+end
 %% Return
 mrQuit;
 cd(cwd);
