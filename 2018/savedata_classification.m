@@ -68,4 +68,5 @@ end
 save(fullfile(cfolder,sprintf('classify_%s',[rois{:}])),'data');
 
 %% Return
+mrQuit;
 cd(cwd);
