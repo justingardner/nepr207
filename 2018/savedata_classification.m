@@ -62,6 +62,10 @@ for ri = 1:length(rois)
     for vi = 1:size(scanCoords,2)
         data.roiresp{end}(vi,:,:) = data.resp(scanCoords(1,vi),scanCoords(2,vi),scanCoords(3,vi),:,:);
     end
+    
+    carea = data.roiresp{end};
+    % save out individual matrices fort he areas
+    save(fullfile(cfolder,sprintf('classify_%s.mat',rois{ri})),'carea');
 end
 
 %% Save
