@@ -107,7 +107,7 @@ end
 
 clear times
 for ti = 1:10
-        times{1} = getInstances(view,croi,stimvol,'startLag',ti,'blockLen',4,'n=inf');
+        times{1} = getInstances(view,croi,stimvol,'startLag',ti-1,'blockLen',4,'n=inf');
 
     %% Pull instances and stack
 
